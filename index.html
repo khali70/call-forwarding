@@ -1,0 +1,551 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Call Forwarding</title>
+<meta name="description" content="Forward your calls to a friend's number, or turn forwarding off, without remembering the codes.">
+<meta name="theme-color" content="#0f766e">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Forwarding">
+<meta name="author" content="Ahmed Khalifa">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+  :root {
+    --bg: #f4f6f5;
+    --card: #ffffff;
+    --text: #14211f;
+    --muted: #5d6b68;
+    --line: #dde4e2;
+    --brand: #0f766e;
+    --brand-soft: #e3f3f1;
+    --go: #15803d;
+    --go-press: #116b33;
+    --stop: #c2410c;
+    --stop-press: #a3360a;
+    --field: #f8faf9;
+    --shadow: 0 1px 2px rgba(16, 40, 36, .06), 0 8px 24px rgba(16, 40, 36, .06);
+    --radius: 18px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0d1413;
+      --card: #151f1d;
+      --text: #e7efed;
+      --muted: #9aaba7;
+      --line: #263431;
+      --brand: #2dd4bf;
+      --brand-soft: #13302c;
+      --go: #22a35a;
+      --go-press: #1c8a4c;
+      --stop: #e2602a;
+      --stop-press: #c54f1f;
+      --field: #0f1817;
+      --shadow: none;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    min-height: 100dvh;
+    background: var(--bg);
+    color: var(--text);
+    font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans Arabic", Tahoma, sans-serif;
+    padding: max(20px, env(safe-area-inset-top)) 16px max(20px, env(safe-area-inset-bottom));
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  main { width: 100%; max-width: 440px; }
+
+  header { display: flex; align-items: center; gap: 12px; margin: 4px 2px 18px; }
+  header img { width: 44px; height: 44px; border-radius: 12px; }
+  header h1 { font-size: 1.3rem; margin: 0; line-height: 1.2; }
+  header p { margin: 2px 0 0; color: var(--muted); font-size: .9rem; }
+  .lang {
+    margin-inline-start: auto;
+    border: 1px solid var(--line);
+    background: var(--card);
+    color: var(--text);
+    border-radius: 999px;
+    padding: 6px 12px;
+    font: inherit;
+    font-size: .85rem;
+    cursor: pointer;
+  }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 20px;
+    margin-bottom: 14px;
+  }
+  .card h2 { font-size: 1rem; margin: 0 0 12px; }
+
+  label.field { display: block; font-weight: 600; font-size: .95rem; margin-bottom: 8px; }
+  .row { display: flex; gap: 8px; }
+  input[type="tel"] {
+    flex: 1;
+    min-width: 0;
+    font: inherit;
+    font-size: 1.25rem;
+    letter-spacing: .02em;
+    padding: 14px 16px;
+    border-radius: 12px;
+    border: 1.5px solid var(--line);
+    background: var(--field);
+    color: var(--text);
+    direction: ltr;
+    text-align: left;
+  }
+  input[type="tel"]:focus { outline: none; border-color: var(--brand); box-shadow: 0 0 0 3px var(--brand-soft); }
+  input[aria-invalid="true"] { border-color: var(--stop); }
+  .icon-btn {
+    flex: none;
+    width: 54px;
+    border-radius: 12px;
+    border: 1.5px solid var(--line);
+    background: var(--field);
+    color: var(--brand);
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+  }
+  .icon-btn svg { width: 24px; height: 24px; }
+  .hint { color: var(--muted); font-size: .85rem; margin: 8px 0 0; min-height: 1.3em; }
+  .hint.error { color: var(--stop); font-weight: 600; }
+
+  .modes { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 16px 0 0; }
+  .modes legend { font-weight: 600; font-size: .95rem; margin-bottom: 8px; padding: 0; }
+  fieldset { border: 0; margin: 14px 0 0; padding: 0; min-width: 0; }
+  .mode { position: relative; }
+  .mode input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+  .mode span {
+    display: block;
+    padding: 10px 12px;
+    border: 1.5px solid var(--line);
+    border-radius: 12px;
+    font-size: .9rem;
+    line-height: 1.3;
+    background: var(--field);
+  }
+  .mode small { display: block; color: var(--muted); font-size: .78rem; margin-top: 2px; }
+  .mode input:checked + span { border-color: var(--brand); background: var(--brand-soft); }
+  .mode input:focus-visible + span { box-shadow: 0 0 0 3px var(--brand-soft); }
+
+  .btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    border: 0;
+    border-radius: 14px;
+    padding: 16px;
+    font: inherit;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #fff;
+    cursor: pointer;
+    margin-top: 12px;
+    transition: transform .08s ease, background-color .15s ease;
+  }
+  .btn:active { transform: scale(.98); }
+  .btn svg { width: 22px; height: 22px; flex: none; }
+  .btn-go { background: var(--go); margin-top: 18px; }
+  .btn-go:active { background: var(--go-press); }
+  .btn-stop { background: var(--stop); }
+  .btn-stop:active { background: var(--stop-press); }
+  .btn-ghost {
+    background: transparent;
+    color: var(--text);
+    border: 1.5px solid var(--line);
+    font-weight: 600;
+    font-size: .95rem;
+    padding: 12px;
+  }
+
+  .code {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 10px;
+    padding: 8px 8px 8px 14px;
+    border-radius: 10px;
+    background: var(--field);
+    border: 1px dashed var(--line);
+    font-size: .85rem;
+    color: var(--muted);
+  }
+  .code b { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 1rem; color: var(--text); direction: ltr; unicode-bidi: bidi-override; }
+  .copy {
+    border: 0;
+    background: var(--brand-soft);
+    color: var(--brand);
+    font: inherit;
+    font-size: .8rem;
+    font-weight: 700;
+    padding: 6px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+
+  .steps { margin: 0; padding-inline-start: 20px; color: var(--muted); font-size: .9rem; }
+  .steps li + li { margin-top: 4px; }
+  .ios-note { display: none; margin-top: 10px; font-size: .85rem; color: var(--muted); }
+  .is-ios .ios-note { display: block; }
+
+  .install { display: none; }
+  .install.show { display: block; }
+
+  footer { text-align: center; color: var(--muted); font-size: .85rem; margin-top: 8px; padding-bottom: 8px; }
+  footer a { color: var(--brand); font-weight: 600; text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+
+  .toast {
+    position: fixed;
+    left: 50%;
+    bottom: max(24px, env(safe-area-inset-bottom));
+    transform: translate(-50%, 20px);
+    opacity: 0;
+    pointer-events: none;
+    background: var(--text);
+    color: var(--bg);
+    padding: 10px 16px;
+    border-radius: 999px;
+    font-size: .9rem;
+    transition: opacity .2s ease, transform .2s ease;
+    max-width: calc(100% - 32px);
+    text-align: center;
+  }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <img src="icon.svg" alt="" width="44" height="44">
+    <div>
+      <h1 data-i18n="title">Call Forwarding</h1>
+      <p data-i18n="subtitle">No codes to remember</p>
+    </div>
+    <button class="lang" id="lang" type="button" aria-label="Switch language">عربي</button>
+  </header>
+
+  <section class="card" aria-labelledby="on-title">
+    <h2 id="on-title" data-i18n="onTitle">Forward my calls</h2>
+    <label class="field" for="number" data-i18n="numberLabel">Friend's phone number</label>
+    <div class="row">
+      <input id="number" type="tel" inputmode="tel" autocomplete="tel" placeholder="01012345678" aria-describedby="number-hint">
+      <button class="icon-btn" id="pick" type="button" hidden aria-label="Pick from contacts" data-i18n-label="pick">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
+      </button>
+    </div>
+    <p class="hint" id="number-hint" data-i18n="numberHint">Saved on this phone for next time.</p>
+
+    <fieldset>
+      <legend data-i18n="whenLabel">When should calls go to your friend?</legend>
+      <div class="modes" id="modes"></div>
+    </fieldset>
+
+    <button class="btn btn-go" id="activate" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg>
+      <span data-i18n="activate">Call to activate</span>
+    </button>
+    <div class="code"><span data-i18n="codeLabel">Code</span> <b id="on-code"></b> <button class="copy" type="button" data-copy="on-code" data-i18n="copy">Copy</button></div>
+  </section>
+
+  <section class="card" aria-labelledby="off-title">
+    <h2 id="off-title" data-i18n="offTitle">Stop forwarding</h2>
+    <button class="btn btn-stop" id="deactivate" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/><path d="M16 3l5 5M21 3l-5 5"/></svg>
+      <span data-i18n="deactivate">Call to deactivate</span>
+    </button>
+    <div class="code"><span data-i18n="codeLabel">Code</span> <b id="off-code"></b> <button class="copy" type="button" data-copy="off-code" data-i18n="copy">Copy</button></div>
+
+    <button class="btn btn-ghost" id="cancel-all" type="button" data-i18n="cancelAll">Cancel every type of forwarding</button>
+    <button class="btn btn-ghost" id="status" type="button" data-i18n="status">Check if forwarding is on</button>
+  </section>
+
+  <section class="card" aria-labelledby="how-title">
+    <h2 id="how-title" data-i18n="howTitle">How it works</h2>
+    <ol class="steps">
+      <li data-i18n="step1">Type your friend's number and press the green button.</li>
+      <li data-i18n="step2">Your phone's dialer opens with the code ready. Press call.</li>
+      <li data-i18n="step3">Wait for the network message confirming it. Done.</li>
+    </ol>
+    <p class="ios-note" data-i18n="iosNote">On iPhone, Safari may block codes with * and #. If the dialer opens empty, tap Copy and paste the code in the Phone app.</p>
+  </section>
+
+  <section class="card install" id="install-card" aria-labelledby="install-title">
+    <h2 id="install-title" data-i18n="installTitle">Keep it on your home screen</h2>
+    <p class="hint" id="install-text" data-i18n="installText">Install the app so it opens instantly, even with no internet.</p>
+    <button class="btn btn-ghost" id="install" type="button" data-i18n="install">Install app</button>
+  </section>
+
+  <footer>
+    <span data-i18n="devBy">Developed by</span> <a href="https://khalifabuilds.dev" target="_blank" rel="noopener">Ahmed Khalifa</a>
+  </footer>
+</main>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(() => {
+  "use strict";
+
+  // GSM supplementary service codes (3GPP TS 22.030). Same on every network.
+  const MODES = [
+    { id: "62", key: "unreachable" },
+    { id: "21", key: "always" },
+    { id: "61", key: "noAnswer" },
+    { id: "67", key: "busy" },
+  ];
+
+  const T = {
+    en: {
+      title: "Call Forwarding",
+      subtitle: "No codes to remember",
+      onTitle: "Forward my calls",
+      numberLabel: "Friend's phone number",
+      numberHint: "Saved on this phone for next time.",
+      pick: "Pick from contacts",
+      whenLabel: "When should calls go to your friend?",
+      unreachable: "Phone off or no signal",
+      unreachableSub: "Most common",
+      always: "Always",
+      alwaysSub: "Your phone won't ring",
+      noAnswer: "When I don't answer",
+      noAnswerSub: "After it rings",
+      busy: "When I'm busy",
+      busySub: "On another call",
+      activate: "Call to activate",
+      codeLabel: "Code",
+      copy: "Copy",
+      copied: "Code copied. Paste it in the Phone app.",
+      offTitle: "Stop forwarding",
+      deactivate: "Call to deactivate",
+      cancelAll: "Cancel every type of forwarding",
+      status: "Check if forwarding is on",
+      howTitle: "How it works",
+      step1: "Type your friend's number and press the green button.",
+      step2: "Your phone's dialer opens with the code ready. Press call.",
+      step3: "Wait for the network message confirming it. Done.",
+      iosNote: "On iPhone, Safari may block codes with * and #. If the dialer opens empty, tap Copy and paste the code in the Phone app.",
+      installTitle: "Keep it on your home screen",
+      installText: "Install the app so it opens instantly, even with no internet.",
+      installIos: "Tap the Share button, then \"Add to Home Screen\".",
+      install: "Install app",
+      errEmpty: "Enter your friend's number first.",
+      errShort: "This number looks too short.",
+      devBy: "Developed by",
+      lang: "عربي",
+    },
+    ar: {
+      title: "تحويل المكالمات",
+      subtitle: "من غير ما تحفظ أي كود",
+      onTitle: "حوّل مكالماتي",
+      numberLabel: "رقم صاحبك",
+      numberHint: "الرقم بيتحفظ على موبايلك للمرة الجاية.",
+      pick: "اختار من جهات الاتصال",
+      whenLabel: "المكالمات تتحول إمتى؟",
+      unreachable: "الموبايل مقفول أو مفيش شبكة",
+      unreachableSub: "الأكثر استخدامًا",
+      always: "على طول",
+      alwaysSub: "موبايلك مش هيرن",
+      noAnswer: "لما مردش",
+      noAnswerSub: "بعد ما يرن",
+      busy: "لما أكون مشغول",
+      busySub: "في مكالمة تانية",
+      activate: "اتصل للتفعيل",
+      codeLabel: "الكود",
+      copy: "نسخ",
+      copied: "الكود اتنسخ. الصقه في تطبيق الهاتف.",
+      offTitle: "إلغاء التحويل",
+      deactivate: "اتصل للإلغاء",
+      cancelAll: "إلغاء كل أنواع التحويل",
+      status: "اعرف التحويل شغال ولا لأ",
+      howTitle: "بيشتغل إزاي",
+      step1: "اكتب رقم صاحبك ودوس على الزرار الأخضر.",
+      step2: "شاشة الاتصال هتفتح والكود جاهز. دوس اتصال.",
+      step3: "استنى رسالة الشبكة اللي بتأكد. خلاص كده.",
+      iosNote: "على الآيفون، سفاري ممكن يمنع الأكواد اللي فيها * و #. لو شاشة الاتصال فتحت فاضية، دوس نسخ والصق الكود في تطبيق الهاتف.",
+      installTitle: "خليه على الشاشة الرئيسية",
+      installText: "نزّل التطبيق عشان يفتح على طول، حتى من غير إنترنت.",
+      installIos: "دوس على زرار المشاركة، وبعدين \"إضافة إلى الشاشة الرئيسية\".",
+      install: "تثبيت التطبيق",
+      errEmpty: "اكتب رقم صاحبك الأول.",
+      errShort: "الرقم ده شكله قصير.",
+      devBy: "تطوير",
+      lang: "English",
+    },
+  };
+
+  const $ = (id) => document.getElementById(id);
+  const store = {
+    get(k) { try { return localStorage.getItem(k); } catch { return null; } },
+    set(k, v) { try { localStorage.setItem(k, v); } catch {} },
+  };
+
+  const numberEl = $("number");
+  const hintEl = $("number-hint");
+  const isIos = /iP(hone|ad|od)/.test(navigator.userAgent) ||
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  if (isIos) document.documentElement.classList.add("is-ios");
+
+  let lang = store.get("cf.lang") || ((navigator.language || "").startsWith("ar") ? "ar" : "en");
+  let mode = MODES.some((m) => m.id === store.get("cf.mode")) ? store.get("cf.mode") : "62";
+  numberEl.value = store.get("cf.number") || "";
+
+  const t = (k) => T[lang][k];
+
+  // Keep only digits and one leading "+".
+  const clean = (v) => v.trim().replace(/[^\d+]/g, "").replace(/(?!^)\+/g, "");
+
+  const codes = {
+    on: () => `**${mode}*${clean(numberEl.value) || "…"}#`,
+    off: () => `##${mode}#`,
+    status: () => `*#${mode}#`,
+    all: () => "##002#",
+  };
+
+  function renderModes() {
+    $("modes").innerHTML = MODES.map((m) => `
+      <label class="mode">
+        <input type="radio" name="mode" value="${m.id}" ${m.id === mode ? "checked" : ""}>
+        <span>${t(m.key)}<small>${t(m.key + "Sub")}</small></span>
+      </label>`).join("");
+  }
+
+  function renderCodes() {
+    $("on-code").textContent = codes.on();
+    $("off-code").textContent = codes.off();
+  }
+
+  function applyLang() {
+    document.documentElement.lang = lang;
+    document.documentElement.dir = lang === "ar" ? "rtl" : "ltr";
+    document.title = t("title");
+    document.querySelectorAll("[data-i18n]").forEach((el) => { el.textContent = t(el.dataset.i18n); });
+    document.querySelectorAll("[data-i18n-label]").forEach((el) => { el.setAttribute("aria-label", t(el.dataset.i18nLabel)); });
+    $("lang").textContent = t("lang");
+    if (isIos) $("install-text").textContent = t("installIos");
+    renderModes();
+  }
+
+  let toastTimer;
+  function toast(msg) {
+    const el = $("toast");
+    el.textContent = msg;
+    el.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove("show"), 2600);
+  }
+
+  function setError(key) {
+    hintEl.textContent = t(key);
+    hintEl.classList.add("error");
+    numberEl.setAttribute("aria-invalid", "true");
+    numberEl.focus();
+  }
+
+  function clearError() {
+    hintEl.textContent = t("numberHint");
+    hintEl.classList.remove("error");
+    numberEl.removeAttribute("aria-invalid");
+  }
+
+  // "#" must be escaped as %23 or the dialer treats it as a URL fragment.
+  function dial(code) {
+    window.location.href = "tel:" + code.replace(/#/g, "%23");
+  }
+
+  $("activate").addEventListener("click", () => {
+    const n = clean(numberEl.value);
+    if (!n) return setError("errEmpty");
+    if (n.replace("+", "").length < 6) return setError("errShort");
+    store.set("cf.number", n);
+    dial(codes.on());
+  });
+  $("deactivate").addEventListener("click", () => dial(codes.off()));
+  $("cancel-all").addEventListener("click", () => dial(codes.all()));
+  $("status").addEventListener("click", () => dial(codes.status()));
+
+  numberEl.addEventListener("input", () => { clearError(); renderCodes(); });
+  $("modes").addEventListener("change", (e) => {
+    mode = e.target.value;
+    store.set("cf.mode", mode);
+    renderCodes();
+  });
+
+  $("lang").addEventListener("click", () => {
+    lang = lang === "ar" ? "en" : "ar";
+    store.set("cf.lang", lang);
+    applyLang();
+  });
+
+  document.querySelectorAll("[data-copy]").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const text = $(btn.dataset.copy).textContent;
+      try { await navigator.clipboard.writeText(text); toast(t("copied")); }
+      catch { toast(text); }
+    });
+  });
+
+  // Contact Picker API (Chrome on Android).
+  if ("contacts" in navigator && "select" in navigator.contacts) {
+    $("pick").hidden = false;
+    $("pick").addEventListener("click", async () => {
+      try {
+        const [c] = await navigator.contacts.select(["tel"], { multiple: false });
+        if (c && c.tel && c.tel[0]) {
+          numberEl.value = clean(c.tel[0]);
+          clearError();
+          renderCodes();
+        }
+      } catch {}
+    });
+  }
+
+  // Install prompt.
+  const standalone = matchMedia("(display-mode: standalone)").matches || navigator.standalone;
+  let deferred;
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    deferred = e;
+    $("install-card").classList.add("show");
+  });
+  if (isIos && !standalone) {
+    $("install-card").classList.add("show");
+    $("install").hidden = true;
+  }
+  $("install").addEventListener("click", async () => {
+    if (!deferred) return;
+    deferred.prompt();
+    await deferred.userChoice;
+    deferred = null;
+    $("install-card").classList.remove("show");
+  });
+  window.addEventListener("appinstalled", () => $("install-card").classList.remove("show"));
+
+  if ("serviceWorker" in navigator && location.protocol !== "file:") {
+    navigator.serviceWorker.register("sw.js").catch(() => {});
+  }
+
+  applyLang();
+  renderCodes();
+})();
+</script>
+</body>
+</html>
