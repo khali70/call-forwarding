@@ -201,8 +201,6 @@
 
   .steps { margin: 0; padding-inline-start: 20px; color: var(--muted); font-size: .9rem; }
   .steps li + li { margin-top: 4px; }
-  .ios-note { display: none; margin-top: 10px; font-size: .85rem; color: var(--muted); }
-  .is-ios .ios-note { display: block; }
 
   .install { display: none; }
   .install.show { display: block; }
@@ -228,6 +226,41 @@
     text-align: center;
   }
   .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+  .sheet {
+    border: 0;
+    padding: 0;
+    margin: auto auto 0;
+    width: 100%;
+    max-width: 440px;
+    background: transparent;
+    color: var(--text);
+  }
+  .sheet::backdrop { background: rgba(0, 0, 0, .45); }
+  .sheet-body {
+    background: var(--card);
+    border-radius: 22px 22px 0 0;
+    padding: 22px 20px max(22px, env(safe-area-inset-bottom));
+  }
+  .sheet h2 { margin: 0 0 4px; font-size: 1.1rem; }
+  .sheet p { margin: 0; color: var(--muted); font-size: .9rem; }
+  .big-code {
+    display: block;
+    margin: 16px 0;
+    padding: 16px;
+    border-radius: 14px;
+    background: var(--brand-soft);
+    color: var(--text);
+    font: 700 1.5rem/1.3 ui-monospace, Menlo, Consolas, monospace;
+    text-align: center;
+    direction: ltr;
+    unicode-bidi: bidi-override;
+    word-break: break-all;
+    user-select: all;
+    -webkit-user-select: all;
+  }
+  .sheet .steps { margin-bottom: 4px; }
+  .sheet .btn-go { margin-top: 16px; }
 
   @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
@@ -285,7 +318,6 @@
       <li data-i18n="step2">Your phone's dialer opens with the code ready. Press call.</li>
       <li data-i18n="step3">Wait for the network message confirming it. Done.</li>
     </ol>
-    <p class="ios-note" data-i18n="iosNote">On iPhone, Safari may block codes with * and #. If the dialer opens empty, tap Copy and paste the code in the Phone app.</p>
   </section>
 
   <section class="card install" id="install-card" aria-labelledby="install-title">
@@ -298,6 +330,21 @@
     <span data-i18n="devBy">Developed by</span> <a href="https://khalifabuilds.dev" target="_blank" rel="noopener">Ahmed Khalifa</a>
   </footer>
 </main>
+
+<dialog class="sheet" id="fallback" aria-labelledby="fb-title">
+  <div class="sheet-body">
+    <h2 id="fb-title" data-i18n="fbTitle">Dialer didn't open?</h2>
+    <p data-i18n="fbText">Some phones block these codes from websites. The code is copied, just paste it:</p>
+    <b class="big-code" id="fb-code"></b>
+    <ol class="steps">
+      <li data-i18n="fbStep1">Open the Phone app and go to Keypad.</li>
+      <li data-i18n="fbStep2">Long-press the number area and tap Paste.</li>
+      <li data-i18n="fbStep3">Press call.</li>
+    </ol>
+    <button class="btn btn-go" id="fb-copy" type="button" data-i18n="fbCopy">Copy code again</button>
+    <button class="btn btn-ghost" id="fb-close" type="button" data-i18n="fbClose">Done</button>
+  </div>
+</dialog>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
@@ -342,7 +389,6 @@
       step1: "Type your friend's number and press the green button.",
       step2: "Your phone's dialer opens with the code ready. Press call.",
       step3: "Wait for the network message confirming it. Done.",
-      iosNote: "On iPhone, Safari may block codes with * and #. If the dialer opens empty, tap Copy and paste the code in the Phone app.",
       installTitle: "Keep it on your home screen",
       installText: "Install the app so it opens instantly, even with no internet.",
       installIos: "Tap the Share button, then \"Add to Home Screen\".",
@@ -350,6 +396,13 @@
       errEmpty: "Enter your friend's number first.",
       errShort: "This number looks too short.",
       devBy: "Developed by",
+      fbTitle: "Dialer didn't open?",
+      fbText: "Some phones block these codes from websites. The code is copied, just paste it:",
+      fbStep1: "Open the Phone app and go to Keypad.",
+      fbStep2: "Long-press the number area and tap Paste.",
+      fbStep3: "Press call.",
+      fbCopy: "Copy code again",
+      fbClose: "Done",
       lang: "عربي",
     },
     ar: {
@@ -380,7 +433,6 @@
       step1: "اكتب رقم صاحبك ودوس على الزرار الأخضر.",
       step2: "شاشة الاتصال هتفتح والكود جاهز. دوس اتصال.",
       step3: "استنى رسالة الشبكة اللي بتأكد. خلاص كده.",
-      iosNote: "على الآيفون، سفاري ممكن يمنع الأكواد اللي فيها * و #. لو شاشة الاتصال فتحت فاضية، دوس نسخ والصق الكود في تطبيق الهاتف.",
       installTitle: "خليه على الشاشة الرئيسية",
       installText: "نزّل التطبيق عشان يفتح على طول، حتى من غير إنترنت.",
       installIos: "دوس على زرار المشاركة، وبعدين \"إضافة إلى الشاشة الرئيسية\".",
@@ -388,6 +440,13 @@
       errEmpty: "اكتب رقم صاحبك الأول.",
       errShort: "الرقم ده شكله قصير.",
       devBy: "تطوير",
+      fbTitle: "شاشة الاتصال مفتحتش؟",
+      fbText: "بعض الموبايلات بتمنع الأكواد دي من المواقع. الكود اتنسخ، الصقه بس:",
+      fbStep1: "افتح تطبيق الهاتف وروح على لوحة الأرقام.",
+      fbStep2: "دوس مطولًا مكان الرقم واختار لصق.",
+      fbStep3: "دوس اتصال.",
+      fbCopy: "انسخ الكود تاني",
+      fbClose: "تمام",
       lang: "English",
     },
   };
@@ -466,10 +525,51 @@
     numberEl.removeAttribute("aria-invalid");
   }
 
-  // "#" must be escaped as %23 or the dialer treats it as a URL fragment.
-  function dial(code) {
-    window.location.href = "tel:" + code.replace(/#/g, "%23");
+  async function copy(text) {
+    try { await navigator.clipboard.writeText(text); return true; } catch {}
+    // Older iOS: execCommand fallback.
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.setAttribute("readonly", "");
+    ta.style.cssText = "position:fixed;opacity:0;top:0;left:0";
+    document.body.appendChild(ta);
+    ta.select();
+    ta.setSelectionRange(0, text.length);
+    let ok = false;
+    try { ok = document.execCommand("copy"); } catch {}
+    ta.remove();
+    return ok;
   }
+
+  function showFallback(code) {
+    $("fb-code").textContent = code;
+    const d = $("fallback");
+    if (d.showModal) { if (!d.open) d.showModal(); } else d.setAttribute("open", "");
+  }
+
+  // Copy the code first, then open the dialer. If the page is still in
+  // front shortly after, the dialer was blocked (iPhone Safari blocks * and #),
+  // so show the paste-it-yourself sheet.
+  function dial(code) {
+    copy(code);
+    let left = false;
+    const mark = () => { left = true; };
+    window.addEventListener("blur", mark, { once: true });
+    document.addEventListener("visibilitychange", mark, { once: true });
+    // "#" must be escaped as %23 or the dialer treats it as a URL fragment.
+    window.location.href = "tel:" + code.replace(/#/g, "%23");
+    setTimeout(() => {
+      window.removeEventListener("blur", mark);
+      document.removeEventListener("visibilitychange", mark);
+      if (!left && document.visibilityState === "visible") showFallback(code);
+    }, isIos ? 900 : 1600);
+  }
+
+  $("fb-copy").addEventListener("click", async () => {
+    if (await copy($("fb-code").textContent)) toast(t("copied"));
+  });
+  $("fb-close").addEventListener("click", () => $("fallback").close ? $("fallback").close() : $("fallback").removeAttribute("open"));
+  $("fallback").addEventListener("click", (e) => { if (e.target === e.currentTarget) e.currentTarget.close(); });
 
   $("activate").addEventListener("click", () => {
     const n = clean(numberEl.value);
@@ -498,8 +598,7 @@
   document.querySelectorAll("[data-copy]").forEach((btn) => {
     btn.addEventListener("click", async () => {
       const text = $(btn.dataset.copy).textContent;
-      try { await navigator.clipboard.writeText(text); toast(t("copied")); }
-      catch { toast(text); }
+      toast(await copy(text) ? t("copied") : text);
     });
   });
 

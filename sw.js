@@ -1,5 +1,5 @@
 // Service worker so the app opens with no internet.
-const CACHE = "call-forwarding-v1";
+const CACHE = "call-forwarding-v2";
 const ASSETS = ["./", "index.html", "manifest.webmanifest", "icon.svg", "icon-192.png", "icon-512.png"];
 
 self.addEventListener("install", (e) => {
